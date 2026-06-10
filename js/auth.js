@@ -33,13 +33,17 @@ const Auth = {
         const email = document.getElementById('loginEmail').value;
         const password = document.getElementById('loginPassword').value;
         
-        // Demo users
+        console.log('Attempting login with:', email);
+        
+        // Demo users - ඔයාගේ email එකත් add කරලා
         const users = {
             'admin@taskflow.com': { password: 'admin123', name: 'Admin User', role: 'ADMIN', department: 'Management' },
             'lead@taskflow.com': { password: 'lead123', name: 'Team Lead', role: 'TEAM_LEAD', department: 'Development' },
-            'member@taskflow.com': { password: 'member123', name: 'Team Member', role: 'MEMBER', department: 'Development' }
+            'member@taskflow.com': { password: 'member123', name: 'Team Member', role: 'MEMBER', department: 'Development' },
+            'mkgdthathsarani@gmail.com': { password: 'admin123', name: 'Thathsarani', role: 'ADMIN', department: 'Management' }
         };
         
+        // Check if user exists
         if (users[email] && users[email].password === password) {
             this.currentUser = {
                 email: email,
@@ -52,9 +56,11 @@ const Auth = {
             this.updateUIForLoggedInUser();
             
             // Show success message
-            this.showNotification('Login successful!', 'success');
+            this.showNotification('Login successful! Welcome ' + this.currentUser.name, 'success');
         } else {
-            this.showNotification('Invalid email or password!', 'error');
+            // Show error message
+            this.showNotification('Invalid email or password! Please check your credentials.', 'error');
+            console.log('Login failed. Available users:', Object.keys(users));
         }
     },
 
@@ -110,8 +116,8 @@ const Auth = {
             color: white;
             z-index: 1000;
             animation: slideIn 0.3s ease;
+            background: ${type === 'success' ? '#10b981' : '#ef4444'};
         `;
-        notification.style.background = type === 'success' ? '#10b981' : '#ef4444';
         
         document.body.appendChild(notification);
         
