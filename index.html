@@ -31,237 +31,156 @@
                 </form>
                 <div class="demo-credentials">
                     <p><strong>Demo Credentials:</strong></p>
-                    <p>Admin: admin@taskflow.com / admin123</p>
-                    <p>Team Lead: lead@taskflow.com / lead123</p>
-                    <p>Member: member@taskflow.com / member123</p>
+                    <p>👑 Admin: admin@taskflow.com / admin123</p>
+                    <p>👥 Team Lead: lead@taskflow.com / lead123</p>
+                    <p>👤 Member: member@taskflow.com / member123</p>
+                    <hr>
+                    <p><strong>📧 Your Email:</strong> mkgdthathsarani@gmail.com / admin123</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Main Dashboard -->
+    <!-- Dashboard Page -->
     <div id="dashboardPage" class="page">
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <div class="sidebar-header">
-                <i class="fas fa-tasks"></i>
-                <h2>TaskFlow</h2>
+        <div class="dashboard-container">
+            <div class="dashboard-header">
+                <div class="logo-area">
+                    <i class="fas fa-tasks"></i>
+                    <h1>TaskFlow Dashboard</h1>
+                </div>
+                <div class="user-area">
+                    <span id="userNameDisplay" class="user-name"></span>
+                    <button id="logoutBtn" class="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </div>
             </div>
-            <nav class="sidebar-nav">
-                <a href="#" class="nav-item active" data-page="dashboard">
-                    <i class="fas fa-home"></i>
-                    <span>Dashboard</span>
-                </a>
-                <a href="#" class="nav-item" data-page="tasks">
-                    <i class="fas fa-list-check"></i>
-                    <span>My Tasks</span>
-                </a>
-                <a href="#" class="nav-item" data-page="create-task" id="createTaskNav">
-                    <i class="fas fa-plus-circle"></i>
-                    <span>Create Task</span>
-                </a>
-                <a href="#" class="nav-item" data-page="team" id="teamNav">
-                    <i class="fas fa-users"></i>
-                    <span>Team</span>
-                </a>
-                <a href="#" class="nav-item" data-page="reports">
-                    <i class="fas fa-chart-line"></i>
-                    <span>Reports</span>
-                </a>
-            </nav>
-            <div class="sidebar-footer">
-                <div class="user-info">
-                    <i class="fas fa-user-circle"></i>
-                    <div>
-                        <p id="userName">User Name</p>
-                        <p id="userRole">Role</p>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon blue">
+                        <i class="fas fa-tasks"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="totalTasks">0</h3>
+                        <p>Total Tasks</p>
                     </div>
                 </div>
-                <button id="logoutBtn" class="logout-btn">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Logout</span>
+                <div class="stat-card">
+                    <div class="stat-icon green">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="completedTasks">0</h3>
+                        <p>Completed</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon yellow">
+                        <i class="fas fa-spinner"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="inProgressTasks">0</h3>
+                        <p>In Progress</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon purple">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="pendingTasks">0</h3>
+                        <p>Pending</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="recent-tasks-section">
+                <h2>📋 Recent Tasks</h2>
+                <div class="tasks-table-container">
+                    <table class="tasks-table">
+                        <thead>
+                            <tr>
+                                <th>Task Title</th>
+                                <th>Assigned To</th>
+                                <th>Priority</th>
+                                <th>Status</th>
+                                <th>Due Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentTasksList">
+                            <tr class="text-center">
+                                <td colspan="6">Loading tasks...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="quick-actions">
+                <button id="createTaskBtn" class="btn-primary">
+                    <i class="fas fa-plus"></i> Create New Task
                 </button>
             </div>
         </div>
+    </div>
 
-        <!-- Main Content -->
-        <div class="main-content">
-            <header class="top-bar">
-                <h1 id="pageTitle">Dashboard</h1>
-                <div class="header-actions">
-                    <div class="notification-icon">
-                        <i class="fas fa-bell"></i>
-                        <span class="badge" id="notificationBadge">0</span>
-                    </div>
-                </div>
-            </header>
-
-            <!-- Dashboard Content -->
-            <div id="dashboardContent" class="content-page active">
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-icon blue">
-                            <i class="fas fa-tasks"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3 id="totalTasks">0</h3>
-                            <p>Total Tasks</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon green">
-                            <i class="fas fa-check-circle"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3 id="completedTasks">0</h3>
-                            <p>Completed</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon yellow">
-                            <i class="fas fa-clock"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3 id="inProgressTasks">0</h3>
-                            <p>In Progress</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon red">
-                            <i class="fas fa-hourglass-half"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3 id="pendingTasks">0</h3>
-                            <p>Pending</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="recent-tasks">
-                    <h2>Recent Tasks</h2>
-                    <div class="tasks-table-container">
-                        <table class="tasks-table">
-                            <thead>
-                                <tr>
-                                    <th>Task</th>
-                                    <th>Assigned To</th>
-                                    <th>Priority</th>
-                                    <th>Status</th>
-                                    <th>Due Date</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="recentTasksList">
-                                <tr><td colspan="6" class="text-center">Loading tasks...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+    <!-- Create Task Modal -->
+    <div id="taskModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create New Task</h3>
+                <span class="close-modal">&times;</span>
             </div>
-
-            <!-- Tasks Content -->
-            <div id="tasksContent" class="content-page">
-                <div class="tasks-header">
-                    <h2>My Tasks</h2>
-                    <div class="task-filters">
-                        <select id="taskFilterStatus">
-                            <option value="all">All Status</option>
-                            <option value="pending">Pending</option>
-                            <option value="in-progress">In Progress</option>
-                            <option value="completed">Completed</option>
+            <form id="createTaskForm">
+                <div class="form-group">
+                    <label>Task Title</label>
+                    <input type="text" id="taskTitle" required placeholder="Enter task title">
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="taskDescription" rows="3" placeholder="Enter task description"></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Assigned To</label>
+                        <select id="taskAssignedTo" required>
+                            <option value="">Select team member</option>
                         </select>
-                        <select id="taskFilterPriority">
-                            <option value="all">All Priority</option>
-                            <option value="high">High</option>
-                            <option value="medium">Medium</option>
-                            <option value="low">Low</option>
+                    </div>
+                    <div class="form-group">
+                        <label>Priority</label>
+                        <select id="taskPriority">
+                            <option value="low">🟢 Low</option>
+                            <option value="medium">🟡 Medium</option>
+                            <option value="high">🔴 High</option>
                         </select>
                     </div>
                 </div>
-                <div class="tasks-list" id="tasksList">
-                    <!-- Tasks will be loaded here -->
-                </div>
-            </div>
-
-            <!-- Create Task Content -->
-            <div id="createTaskContent" class="content-page">
-                <div class="form-container">
-                    <h2>Create New Task</h2>
-                    <form id="createTaskForm">
-                        <div class="form-group">
-                            <label>Task Title</label>
-                            <input type="text" id="taskTitle" required placeholder="Enter task title">
-                        </div>
-                        <div class="form-group">
-                            <label>Description</label>
-                            <textarea id="taskDescription" rows="4" placeholder="Enter task description"></textarea>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Assigned To</label>
-                                <select id="taskAssignedTo" required>
-                                    <option value="">Select team member</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Priority</label>
-                                <select id="taskPriority">
-                                    <option value="low">Low</option>
-                                    <option value="medium">Medium</option>
-                                    <option value="high">High</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Due Date</label>
-                                <input type="date" id="taskDueDate" required>
-                            </div>
-                            <div class="form-group">
-                                <label>Status</label>
-                                <select id="taskStatus">
-                                    <option value="pending">Pending</option>
-                                    <option value="in-progress">In Progress</option>
-                                    <option value="completed">Completed</option>
-                                </select>
-                            </div>
-                        </div>
-                        <button type="submit" class="btn-primary">Create Task</button>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Team Content -->
-            <div id="teamContent" class="content-page">
-                <div class="team-header">
-                    <h2>Team Members</h2>
-                    <button id="addMemberBtn" class="btn-secondary" style="display: none;">
-                        <i class="fas fa-user-plus"></i> Add Member
-                    </button>
-                </div>
-                <div class="team-grid" id="teamGrid">
-                    <!-- Team members will be loaded here -->
-                </div>
-            </div>
-
-            <!-- Reports Content -->
-            <div id="reportsContent" class="content-page">
-                <h2>Performance Reports</h2>
-                <div class="reports-container">
-                    <div class="report-card">
-                        <h3>Task Completion Rate</h3>
-                        <canvas id="completionChart"></canvas>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Due Date</label>
+                        <input type="date" id="taskDueDate" required>
                     </div>
-                    <div class="report-card">
-                        <h3>Tasks by Priority</h3>
-                        <canvas id="priorityChart"></canvas>
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select id="taskStatus">
+                            <option value="pending">⏳ Pending</option>
+                            <option value="in-progress">🔄 In Progress</option>
+                            <option value="completed">✅ Completed</option>
+                        </select>
                     </div>
                 </div>
-            </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary cancel-btn">Cancel</button>
+                    <button type="submit" class="btn-primary">Create Task</button>
+                </div>
+            </form>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/tasks.js"></script>
     <script src="js/app.js"></script>
