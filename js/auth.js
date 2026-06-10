@@ -3,6 +3,7 @@ const Auth = {
     currentUser: null,
 
     init: function() {
+        console.log('✅ Auth module initialized');
         this.loadUserFromStorage();
         this.setupEventListeners();
     },
@@ -10,8 +11,13 @@ const Auth = {
     loadUserFromStorage: function() {
         const savedUser = localStorage.getItem('currentUser');
         if (savedUser) {
-            this.currentUser = JSON.parse(savedUser);
-            this.updateUIForLoggedInUser();
+            try {
+                this.currentUser = JSON.parse(savedUser);
+                console.log('📀 Loaded user:', this.currentUser.email);
+                this.updateUIForLoggedInUser();
+            } catch(e) {
+                console.error('Error:', e);
+            }
         }
     },
 
@@ -33,13 +39,17 @@ const Auth = {
         const email = document.getElementById('loginEmail').value;
         const password = document.getElementById('loginPassword').value;
         
-        // Demo users
+        console.log('🔐 Login attempt:', email);
+        
+        // Users database - ඔයාගේ email එක add කරලා
         const users = {
             'admin@taskflow.com': { password: 'admin123', name: 'Admin User', role: 'ADMIN', department: 'Management' },
             'lead@taskflow.com': { password: 'lead123', name: 'Team Lead', role: 'TEAM_LEAD', department: 'Development' },
-            'member@taskflow.com': { password: 'member123', name: 'Team Member', role: 'MEMBER', department: 'Development' }
+            'member@taskflow.com': { password: 'member123', name: 'Team Member', role: 'MEMBER', department: 'Development' },
+            'mkdgthathsarani@gmail.com': { password: 'admin123', name: 'Thathsarani', role: 'ADMIN', department: 'Management' }
         };
         
+        // Check credentials
         if (users[email] && users[email].password === password) {
             this.currentUser = {
                 email: email,
@@ -49,24 +59,30 @@ const Auth = {
             };
             
             localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
+            console.log('✅ Login successful!');
+            this.showNotification('✅ Login successful! Welcome ' + this.currentUser.name, 'success');
             this.updateUIForLoggedInUser();
             
-            // Show success message
-            this.showNotification('Login successful!', 'success');
+            if (typeof Tasks !== 'undefined') {
+                Tasks.loadTasks();
+            }
         } else {
-            this.showNotification('Invalid email or password!', 'error');
+            console.log('❌ Login failed');
+            this.showNotification('❌ Invalid email or password! Please use: mkgdthathsarani@gmail.com / admin123', 'error');
         }
     },
 
     handleLogout: function() {
         this.currentUser = null;
         localStorage.removeItem('currentUser');
-        localStorage.removeItem('tasks');
         
         document.getElementById('loginPage').classList.add('active');
         document.getElementById('dashboardPage').classList.remove('active');
         
-        this.showNotification('Logged out successfully!', 'success');
+        document.getElementById('loginEmail').value = '';
+        document.getElementById('loginPassword').value = '';
+        
+        this.showNotification('👋 Logged out successfully!', 'success');
     },
 
     updateUIForLoggedInUser: function() {
@@ -74,32 +90,16 @@ const Auth = {
             document.getElementById('loginPage').classList.remove('active');
             document.getElementById('dashboardPage').classList.add('active');
             
-            document.getElementById('userName').textContent = this.currentUser.name;
-            document.getElementById('userRole').textContent = this.currentUser.role;
-            
-            // Show/hide admin features
-            const isAdmin = this.currentUser.role === 'ADMIN';
-            const createTaskNav = document.getElementById('createTaskNav');
-            const teamNav = document.getElementById('teamNav');
-            const addMemberBtn = document.getElementById('addMemberBtn');
-            
-            if (createTaskNav) createTaskNav.style.display = isAdmin ? 'flex' : 'none';
-            if (teamNav) teamNav.style.display = isAdmin ? 'flex' : 'none';
-            if (addMemberBtn) addMemberBtn.style.display = isAdmin ? 'flex' : 'none';
-            
-            // Load dashboard data
-            if (typeof Tasks !== 'undefined') {
-                Tasks.loadTasks();
-                Tasks.updateDashboardStats();
-                Tasks.loadRecentTasks();
-                if (isAdmin) Tasks.loadTeamMembers();
+            const userNameDisplay = document.getElementById('userNameDisplay');
+            if (userNameDisplay) {
+                userNameDisplay.textContent = `${this.currentUser.name} (${this.currentUser.role})`;
             }
         }
     },
 
     showNotification: function(message, type) {
         const notification = document.createElement('div');
-        notification.className = `notification ${type}`;
+        notification.className = 'notification';
         notification.textContent = message;
         notification.style.cssText = `
             position: fixed;
@@ -109,19 +109,17 @@ const Auth = {
             border-radius: 8px;
             color: white;
             z-index: 1000;
+            background: ${type === 'success' ? '#10b981' : '#ef4444'};
             animation: slideIn 0.3s ease;
         `;
-        notification.style.background = type === 'success' ? '#10b981' : '#ef4444';
-        
         document.body.appendChild(notification);
-        
-        setTimeout(() => {
-            notification.remove();
-        }, 3000);
+        setTimeout(() => notification.remove(), 3000);
     }
 };
 
-// Initialize auth when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
+// Initialize
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => Auth.init());
+} else {
     Auth.init();
-});
+}
