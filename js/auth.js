@@ -3,7 +3,6 @@ const Auth = {
     currentUser: null,
 
     init: function() {
-        console.log('✅ Auth module initialized');
         this.loadUserFromStorage();
         this.setupEventListeners();
     },
@@ -11,13 +10,8 @@ const Auth = {
     loadUserFromStorage: function() {
         const savedUser = localStorage.getItem('currentUser');
         if (savedUser) {
-            try {
-                this.currentUser = JSON.parse(savedUser);
-                console.log('📀 Loaded user from storage:', this.currentUser.email);
-                this.updateUIForLoggedInUser();
-            } catch(e) {
-                console.error('Error parsing user:', e);
-            }
+            this.currentUser = JSON.parse(savedUser);
+            this.updateUIForLoggedInUser();
         }
     },
 
@@ -39,17 +33,13 @@ const Auth = {
         const email = document.getElementById('loginEmail').value;
         const password = document.getElementById('loginPassword').value;
         
-        console.log('🔐 Login attempt with:', email);
-        
-        // Users database
+        // Demo users
         const users = {
             'admin@taskflow.com': { password: 'admin123', name: 'Admin User', role: 'ADMIN', department: 'Management' },
             'lead@taskflow.com': { password: 'lead123', name: 'Team Lead', role: 'TEAM_LEAD', department: 'Development' },
-            'member@taskflow.com': { password: 'member123', name: 'Team Member', role: 'MEMBER', department: 'Development' },
-            'mkgdthathsarani@gmail.com': { password: 'admin123', name: 'Thathsarani', role: 'ADMIN', department: 'Management' }
+            'member@taskflow.com': { password: 'member123', name: 'Team Member', role: 'MEMBER', department: 'Development' }
         };
         
-        // Check credentials
         if (users[email] && users[email].password === password) {
             this.currentUser = {
                 email: email,
@@ -59,62 +49,70 @@ const Auth = {
             };
             
             localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
-            console.log('✅ Login successful! User:', this.currentUser.name);
-            this.showNotification('✅ Login successful! Welcome ' + this.currentUser.name, 'success');
             this.updateUIForLoggedInUser();
             
-            // Load tasks after login
-            if (typeof Tasks !== 'undefined') {
-                Tasks.loadTasks();
-            }
+            // Show success message
+            this.showNotification('Login successful!', 'success');
         } else {
-            console.log('❌ Login failed. Available emails:', Object.keys(users));
-            this.showNotification('❌ Invalid email or password! Please check your credentials.', 'error');
+            this.showNotification('Invalid email or password!', 'error');
         }
     },
 
     handleLogout: function() {
-        console.log('🚪 Logging out...');
         this.currentUser = null;
         localStorage.removeItem('currentUser');
+        localStorage.removeItem('tasks');
         
-        const loginPage = document.getElementById('loginPage');
-        const dashboardPage = document.getElementById('dashboardPage');
+        document.getElementById('loginPage').classList.add('active');
+        document.getElementById('dashboardPage').classList.remove('active');
         
-        if (loginPage) loginPage.classList.add('active');
-        if (dashboardPage) dashboardPage.classList.remove('active');
-        
-        // Clear form
-        const emailInput = document.getElementById('loginEmail');
-        const passwordInput = document.getElementById('loginPassword');
-        if (emailInput) emailInput.value = '';
-        if (passwordInput) passwordInput.value = '';
-        
-        this.showNotification('👋 Logged out successfully!', 'success');
+        this.showNotification('Logged out successfully!', 'success');
     },
 
     updateUIForLoggedInUser: function() {
         if (this.currentUser) {
-            const loginPage = document.getElementById('loginPage');
-            const dashboardPage = document.getElementById('dashboardPage');
+            document.getElementById('loginPage').classList.remove('active');
+            document.getElementById('dashboardPage').classList.add('active');
             
-            if (loginPage) loginPage.classList.remove('active');
-            if (dashboardPage) dashboardPage.classList.add('active');
+            document.getElementById('userName').textContent = this.currentUser.name;
+            document.getElementById('userRole').textContent = this.currentUser.role;
             
-            const userNameDisplay = document.getElementById('userNameDisplay');
-            if (userNameDisplay) {
-                userNameDisplay.textContent = `${this.currentUser.name} (${this.currentUser.role})`;
+            // Show/hide admin features
+            const isAdmin = this.currentUser.role === 'ADMIN';
+            const createTaskNav = document.getElementById('createTaskNav');
+            const teamNav = document.getElementById('teamNav');
+            const addMemberBtn = document.getElementById('addMemberBtn');
+            
+            if (createTaskNav) createTaskNav.style.display = isAdmin ? 'flex' : 'none';
+            if (teamNav) teamNav.style.display = isAdmin ? 'flex' : 'none';
+            if (addMemberBtn) addMemberBtn.style.display = isAdmin ? 'flex' : 'none';
+            
+            // Load dashboard data
+            if (typeof Tasks !== 'undefined') {
+                Tasks.loadTasks();
+                Tasks.updateDashboardStats();
+                Tasks.loadRecentTasks();
+                if (isAdmin) Tasks.loadTeamMembers();
             }
-            
-            console.log('🎨 UI updated for user:', this.currentUser.name);
         }
     },
 
     showNotification: function(message, type) {
         const notification = document.createElement('div');
-        notification.className = 'notification';
+        notification.className = `notification ${type}`;
         notification.textContent = message;
-        notification.style.backgroundColor = type === 'success' ? '#10b981' : '#ef4444';
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            color: white;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        `;
+        notification.style.background = type === 'success' ? '#10b981' : '#ef4444';
+        
         document.body.appendChild(notification);
         
         setTimeout(() => {
@@ -123,9 +121,7 @@ const Auth = {
     }
 };
 
-// Initialize when DOM is ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => Auth.init());
-} else {
+// Initialize auth when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
     Auth.init();
-}
+});
