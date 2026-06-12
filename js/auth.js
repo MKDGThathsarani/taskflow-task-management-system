@@ -1,14 +1,6 @@
-// ============= AUTHENTICATION MODULE =============
-
+// Authentication Module
 const Auth = {
     currentUser: null,
-
-    // Demo users database
-    USERS: {
-        'admin@taskflow.com': { password: 'admin123', name: 'Admin User', role: 'ADMIN' },
-        'member@taskflow.com': { password: 'member123', name: 'Team Member', role: 'MEMBER' },
-        'mkgdthathsarani@gmail.com': { password: 'admin123', name: 'Thathsarani', role: 'ADMIN' }
-    },
 
     init() {
         this.loadUserFromStorage();
@@ -21,7 +13,8 @@ const Auth = {
             try {
                 this.currentUser = JSON.parse(savedUser);
                 if (typeof Tasks !== 'undefined') {
-                    Tasks.init(this.currentUser);
+                    Tasks.init();
+                    Tasks.updateUIForUser(this.currentUser);
                 }
                 this.showDashboard();
             } catch(e) {
@@ -48,7 +41,14 @@ const Auth = {
         const email = document.getElementById('loginEmail').value.trim();
         const password = document.getElementById('loginPassword').value;
         
-        const user = this.USERS[email];
+        // Demo users database
+        const USERS = {
+            'admin@taskflow.com': { password: 'admin123', name: 'Admin User', role: 'ADMIN' },
+            'member@taskflow.com': { password: 'member123', name: 'Team Member', role: 'MEMBER' },
+            'mkgdthathsarani@gmail.com': { password: 'admin123', name: 'Thathsarani', role: 'ADMIN' }
+        };
+        
+        const user = USERS[email];
         
         if (user && user.password === password) {
             this.currentUser = {
@@ -58,10 +58,15 @@ const Auth = {
             };
             
             localStorage.setItem('taskflow_user', JSON.stringify(this.currentUser));
-            this.showNotification(`✅ Welcome ${user.name}!`, 'success');
+            this.showNotification('✅ Login successful! Welcome ' + user.name, 'success');
             this.showDashboard();
+            
+            if (typeof Tasks !== 'undefined') {
+                Tasks.init();
+                Tasks.updateUIForUser(this.currentUser);
+            }
         } else {
-            this.showNotification('❌ Invalid email or password!', 'error');
+            this.showNotification('❌ Invalid email or password! Use: admin@taskflow.com / admin123', 'error');
         }
     },
 
@@ -69,30 +74,30 @@ const Auth = {
         this.currentUser = null;
         localStorage.removeItem('taskflow_user');
         
-        document.getElementById('loginPage').classList.add('active');
         document.getElementById('dashboardPage').classList.remove('active');
+        document.getElementById('loginPage').classList.add('active');
         
-        document.getElementById('loginEmail').value = '';
-        document.getElementById('loginPassword').value = '';
+        const emailInput = document.getElementById('loginEmail');
+        const passwordInput = document.getElementById('loginPassword');
+        if (emailInput) emailInput.value = '';
+        if (passwordInput) passwordInput.value = '';
         
         this.showNotification('👋 Logged out successfully!', 'success');
     },
 
     showDashboard() {
-        document.getElementById('loginPage').classList.remove('active');
-        document.getElementById('dashboardPage').classList.add('active');
-        
-        document.getElementById('userName').textContent = this.currentUser.name;
-        document.getElementById('userRole').textContent = this.currentUser.role;
-        
-        const isAdmin = this.currentUser.role === 'ADMIN';
-        const createTaskNav = document.getElementById('createTaskNav');
-        if (createTaskNav) {
-            createTaskNav.style.display = isAdmin ? 'flex' : 'none';
-        }
-        
-        if (typeof Tasks !== 'undefined') {
-            Tasks.loadAllData();
+        if (this.currentUser) {
+            document.getElementById('loginPage').classList.remove('active');
+            document.getElementById('dashboardPage').classList.add('active');
+            
+            document.getElementById('userName').textContent = this.currentUser.name;
+            document.getElementById('userRole').textContent = this.currentUser.role;
+            
+            const isAdmin = this.currentUser.role === 'ADMIN';
+            const createTaskNav = document.getElementById('createTaskNav');
+            if (createTaskNav) {
+                createTaskNav.style.display = isAdmin ? 'flex' : 'none';
+            }
         }
     },
 
@@ -103,14 +108,12 @@ const Auth = {
         notif.style.backgroundColor = type === 'success' ? '#10b981' : '#ef4444';
         document.body.appendChild(notif);
         setTimeout(() => notif.remove(), 3000);
-    },
-
-    getCurrentUser() {
-        return this.currentUser;
     }
 };
 
 // Initialize when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => Auth.init());
+} else {
     Auth.init();
-});
+}

@@ -1,12 +1,6 @@
-// ============= TASKS MODULE =============
-
+// Tasks Module
 const Tasks = {
     allTasks: [],
-    currentUser: null,
-    completionChart: null,
-    priorityChart: null,
-
-    // Team members list
     teamMembers: [
         { name: "John Doe", role: "Developer" },
         { name: "Jane Smith", role: "Designer" },
@@ -14,28 +8,15 @@ const Tasks = {
         { name: "Sarah Williams", role: "Developer" },
         { name: "Thathsarani", role: "Admin" }
     ],
+    currentUser: null,
+    completionChart: null,
+    priorityChart: null,
+    recentCurrentPage: 1,
+    recentItemsPerPage: 5,
 
-    // Sample tasks
-    sampleTasks: [
-        { id: 1, title: "Complete project documentation", description: "Write final documentation", assignedTo: "John Doe", priority: "high", status: "in-progress", dueDate: "2024-12-20" },
-        { id: 2, title: "Design database schema", description: "Create ER diagram", assignedTo: "Jane Smith", priority: "medium", status: "pending", dueDate: "2024-12-25" },
-        { id: 3, title: "Implement login system", description: "Add authentication", assignedTo: "Mike Johnson", priority: "high", status: "completed", dueDate: "2024-12-15" },
-        { id: 4, title: "Create UI mockups", description: "Design wireframes", assignedTo: "Sarah Williams", priority: "low", status: "pending", dueDate: "2024-12-28" },
-        { id: 5, title: "Write unit tests", description: "Test all modules", assignedTo: "Thathsarani", priority: "medium", status: "in-progress", dueDate: "2024-12-22" }
-    ],
-
-    init(user) {
-        this.currentUser = user;
+    init() {
         this.loadTasksFromStorage();
         this.setupEventListeners();
-        this.loadTeamMembersForSelect();
-    },
-
-    loadAllData() {
-        this.updateDashboardStats();
-        this.loadRecentTasks();
-        this.updateCharts();
-        this.loadMyTasks();
     },
 
     loadTasksFromStorage() {
@@ -43,38 +24,72 @@ const Tasks = {
         if (saved) {
             this.allTasks = JSON.parse(saved);
         } else {
-            this.allTasks = this.sampleTasks;
-            this.saveTasks();
+            this.loadSampleTasks();
         }
+    },
+
+    loadSampleTasks() {
+        this.allTasks = [
+            { id: 1, title: "Complete project documentation", description: "Write comprehensive documentation", assignedTo: "John Doe", priority: "high", status: "in-progress", dueDate: "2024-12-20", createdAt: new Date().toISOString() },
+            { id: 2, title: "Design database schema", description: "Create ER diagram and schema", assignedTo: "Jane Smith", priority: "medium", status: "pending", dueDate: "2024-12-25", createdAt: new Date().toISOString() },
+            { id: 3, title: "Implement login system", description: "Add authentication", assignedTo: "Mike Johnson", priority: "high", status: "completed", dueDate: "2024-12-15", createdAt: new Date().toISOString() },
+            { id: 4, title: "Create UI mockups", description: "Design wireframes", assignedTo: "Sarah Williams", priority: "low", status: "pending", dueDate: "2024-12-28", createdAt: new Date().toISOString() },
+            { id: 5, title: "Write unit tests", description: "Test all modules", assignedTo: "Thathsarani", priority: "medium", status: "in-progress", dueDate: "2024-12-22", createdAt: new Date().toISOString() },
+            { id: 6, title: "Deploy to server", description: "Production deployment", assignedTo: "John Doe", priority: "high", status: "pending", dueDate: "2024-12-30", createdAt: new Date().toISOString() }
+        ];
+        this.saveTasks();
     },
 
     saveTasks() {
         localStorage.setItem('taskflow_tasks', JSON.stringify(this.allTasks));
     },
 
+    updateUIForUser(user) {
+        this.currentUser = user;
+        this.updateDashboardStats();
+        this.loadRecentTasks();
+        this.loadMyTasks();
+        this.updateCharts();
+        this.loadTeamMembersForSelect();
+    },
+
     setupEventListeners() {
-        const createTaskForm = document.getElementById('createTaskForm');
-        if (createTaskForm) {
-            createTaskForm.addEventListener('submit', (e) => this.createTask(e));
+        // Create task form
+        const createForm = document.getElementById('createTaskForm');
+        if (createForm) {
+            createForm.addEventListener('submit', (e) => this.createTask(e));
         }
 
-        const filterStatus = document.getElementById('taskFilterStatus');
-        const filterPriority = document.getElementById('taskFilterPriority');
-        
-        if (filterStatus) {
-            filterStatus.addEventListener('change', () => this.loadMyTasks());
-        }
-        if (filterPriority) {
-            filterPriority.addEventListener('change', () => this.loadMyTasks());
-        }
+        // Filters
+        const statusFilter = document.getElementById('taskFilterStatus');
+        const priorityFilter = document.getElementById('taskFilterPriority');
+        const clearFilters = document.getElementById('clearFilters');
+        const searchInput = document.getElementById('searchTasks');
+
+        if (statusFilter) statusFilter.addEventListener('change', () => this.loadMyTasks());
+        if (priorityFilter) priorityFilter.addEventListener('change', () => this.loadMyTasks());
+        if (clearFilters) clearFilters.addEventListener('click', () => this.clearFilters());
+        if (searchInput) searchInput.addEventListener('input', (e) => this.searchTasks(e.target.value));
+
+        // Pagination
+        const prevBtn = document.getElementById('prevRecentPage');
+        const nextBtn = document.getElementById('nextRecentPage');
+        if (prevBtn) prevBtn.addEventListener('click', () => this.changeRecentPage(-1));
+        if (nextBtn) nextBtn.addEventListener('click', () => this.changeRecentPage(1));
 
         // Navigation
         document.querySelectorAll('.nav-item').forEach(item => {
-            item.addEventListener('click', () => {
+            item.addEventListener('click', (e) => {
                 const page = item.dataset.page;
                 this.switchPage(page);
             });
         });
+
+        // Dark mode
+        const darkToggle = document.getElementById('darkModeToggle');
+        if (darkToggle) {
+            darkToggle.addEventListener('click', () => this.toggleDarkMode());
+        }
     },
 
     switchPage(page) {
@@ -107,18 +122,28 @@ const Tasks = {
 
     loadRecentTasks() {
         const tbody = document.getElementById('recentTasksList');
-        let recentTasks = [...this.allTasks].slice(0, 5);
+        if (!tbody) return;
         
+        let userTasks = this.allTasks;
         if (this.currentUser && this.currentUser.role !== 'ADMIN') {
-            recentTasks = recentTasks.filter(t => t.assignedTo === this.currentUser.name).slice(0, 5);
+            userTasks = this.allTasks.filter(t => t.assignedTo === this.currentUser.name);
         }
         
-        if (recentTasks.length === 0) {
+        const start = (this.recentCurrentPage - 1) * this.recentItemsPerPage;
+        const end = start + this.recentItemsPerPage;
+        const paginatedTasks = userTasks.slice(start, end);
+        const totalPages = Math.ceil(userTasks.length / this.recentItemsPerPage);
+        
+        document.getElementById('recentPageInfo').textContent = `Page ${this.recentCurrentPage} of ${totalPages || 1}`;
+        document.getElementById('prevRecentPage').disabled = this.recentCurrentPage === 1;
+        document.getElementById('nextRecentPage').disabled = this.recentCurrentPage === totalPages || totalPages === 0;
+        
+        if (paginatedTasks.length === 0) {
             tbody.innerHTML = '<tr><td colspan="6" class="text-center">No tasks found</td></tr>';
             return;
         }
         
-        tbody.innerHTML = recentTasks.map(task => `
+        tbody.innerHTML = paginatedTasks.map(task => `
             <tr>
                 <td><strong>${this.escapeHtml(task.title)}</strong></td>
                 <td>${task.assignedTo}</td>
@@ -126,28 +151,46 @@ const Tasks = {
                 <td><span class="status-badge status-${task.status === 'in-progress' ? 'progress' : task.status}">${task.status}</span></td>
                 <td>${task.dueDate}</td>
                 <td>
-                    <button onclick="Tasks.editTaskStatus(${task.id})" class="action-btn edit-btn"><i class="fas fa-edit"></i></button>
-                    <button onclick="Tasks.deleteTaskById(${task.id})" class="action-btn delete-btn"><i class="fas fa-trash"></i></button>
+                    <button onclick="Tasks.editTask(${task.id})" class="action-btn edit-btn"><i class="fas fa-edit"></i></button>
+                    <button onclick="Tasks.deleteTask(${task.id})" class="action-btn delete-btn"><i class="fas fa-trash"></i></button>
                 </td>
             </tr>
         `).join('');
     },
 
+    changeRecentPage(delta) {
+        let userTasks = this.allTasks;
+        if (this.currentUser && this.currentUser.role !== 'ADMIN') {
+            userTasks = this.allTasks.filter(t => t.assignedTo === this.currentUser.name);
+        }
+        const totalPages = Math.ceil(userTasks.length / this.recentItemsPerPage);
+        const newPage = this.recentCurrentPage + delta;
+        if (newPage >= 1 && newPage <= totalPages) {
+            this.recentCurrentPage = newPage;
+            this.loadRecentTasks();
+        }
+    },
+
     loadMyTasks() {
         const container = document.getElementById('tasksList');
-        const statusFilter = document.getElementById('taskFilterStatus').value;
-        const priorityFilter = document.getElementById('taskFilterPriority').value;
+        if (!container) return;
+        
+        const statusFilter = document.getElementById('taskFilterStatus')?.value || 'all';
+        const priorityFilter = document.getElementById('taskFilterPriority')?.value || 'all';
+        const searchTerm = document.getElementById('searchTasks')?.value.toLowerCase() || '';
         
         let filtered = this.allTasks;
+        
         if (this.currentUser && this.currentUser.role !== 'ADMIN') {
             filtered = filtered.filter(t => t.assignedTo === this.currentUser.name);
         }
         
         if (statusFilter !== 'all') filtered = filtered.filter(t => t.status === statusFilter);
         if (priorityFilter !== 'all') filtered = filtered.filter(t => t.priority === priorityFilter);
+        if (searchTerm) filtered = filtered.filter(t => t.title.toLowerCase().includes(searchTerm) || t.description.toLowerCase().includes(searchTerm));
         
         if (filtered.length === 0) {
-            container.innerHTML = '<div class="text-center" style="padding: 40px;">No tasks found</div>';
+            container.innerHTML = '<div class="text-center" style="padding: 40px;">📭 No tasks found</div>';
             return;
         }
         
@@ -155,7 +198,7 @@ const Tasks = {
             <div class="task-card">
                 <div class="task-info">
                     <h4>${this.escapeHtml(task.title)}</h4>
-                    <p>${this.escapeHtml(task.description) || 'No description'}</p>
+                    <p>${this.escapeHtml(task.description || 'No description')}</p>
                     <div class="task-meta">
                         <span><i class="fas fa-user"></i> ${task.assignedTo}</span>
                         <span><i class="fas fa-calendar"></i> Due: ${task.dueDate}</span>
@@ -164,11 +207,27 @@ const Tasks = {
                 <div class="task-actions">
                     <span class="priority-badge priority-${task.priority}">${task.priority}</span>
                     <span class="status-badge status-${task.status === 'in-progress' ? 'progress' : task.status}">${task.status}</span>
-                    <button onclick="Tasks.editTaskStatus(${task.id})" class="action-btn edit-btn"><i class="fas fa-edit"></i></button>
-                    <button onclick="Tasks.deleteTaskById(${task.id})" class="action-btn delete-btn"><i class="fas fa-trash"></i></button>
+                    <button onclick="Tasks.editTask(${task.id})" class="action-btn edit-btn"><i class="fas fa-edit"></i></button>
+                    <button onclick="Tasks.deleteTask(${task.id})" class="action-btn delete-btn"><i class="fas fa-trash"></i></button>
                 </div>
             </div>
         `).join('');
+    },
+
+    searchTasks(term) {
+        this.loadMyTasks();
+    },
+
+    clearFilters() {
+        const statusFilter = document.getElementById('taskFilterStatus');
+        const priorityFilter = document.getElementById('taskFilterPriority');
+        const searchInput = document.getElementById('searchTasks');
+        
+        if (statusFilter) statusFilter.value = 'all';
+        if (priorityFilter) priorityFilter.value = 'all';
+        if (searchInput) searchInput.value = '';
+        
+        this.loadMyTasks();
     },
 
     createTask(e) {
@@ -181,17 +240,16 @@ const Tasks = {
             assignedTo: document.getElementById('taskAssignedTo').value,
             priority: document.getElementById('taskPriority').value,
             status: document.getElementById('taskStatus').value,
-            dueDate: document.getElementById('taskDueDate').value
+            dueDate: document.getElementById('taskDueDate').value,
+            createdAt: new Date().toISOString()
         };
         
-        this.allTasks.push(newTask);
+        this.allTasks.unshift(newTask);
         this.saveTasks();
         document.getElementById('createTaskForm').reset();
+        document.getElementById('taskDueDate').valueAsDate = new Date();
         
-        if (typeof Auth !== 'undefined') {
-            Auth.showNotification('✅ Task created successfully!', 'success');
-        }
-        
+        this.showNotification('✅ Task created successfully!', 'success');
         this.switchPage('dashboard');
         this.updateDashboardStats();
         this.loadRecentTasks();
@@ -199,7 +257,7 @@ const Tasks = {
         this.updateCharts();
     },
 
-    editTaskStatus(id) {
+    editTask(id) {
         const task = this.allTasks.find(t => t.id === id);
         if (!task) return;
         
@@ -211,23 +269,19 @@ const Tasks = {
             this.loadRecentTasks();
             this.loadMyTasks();
             this.updateCharts();
-            if (typeof Auth !== 'undefined') {
-                Auth.showNotification('✅ Task status updated!', 'success');
-            }
+            this.showNotification('✅ Task status updated!', 'success');
         }
     },
 
-    deleteTaskById(id) {
-        if (confirm('Delete this task?')) {
+    deleteTask(id) {
+        if (confirm('⚠️ Delete this task permanently?')) {
             this.allTasks = this.allTasks.filter(t => t.id !== id);
             this.saveTasks();
             this.updateDashboardStats();
             this.loadRecentTasks();
             this.loadMyTasks();
             this.updateCharts();
-            if (typeof Auth !== 'undefined') {
-                Auth.showNotification('🗑️ Task deleted!', 'success');
-            }
+            this.showNotification('🗑️ Task deleted!', 'success');
         }
     },
 
@@ -246,6 +300,17 @@ const Tasks = {
         const high = this.allTasks.filter(t => t.priority === 'high').length;
         const medium = this.allTasks.filter(t => t.priority === 'medium').length;
         const low = this.allTasks.filter(t => t.priority === 'low').length;
+        const total = this.allTasks.length;
+        
+        const completionStats = document.getElementById('completionStats');
+        if (completionStats) {
+            completionStats.innerHTML = `Completed: ${completed} (${total ? Math.round(completed/total*100) : 0}%) | In Progress: ${inProgress} | Pending: ${pending}`;
+        }
+        
+        const priorityStats = document.getElementById('priorityStats');
+        if (priorityStats) {
+            priorityStats.innerHTML = `High: ${high} | Medium: ${medium} | Low: ${low}`;
+        }
         
         const completionCtx = document.getElementById('completionChart')?.getContext('2d');
         const priorityCtx = document.getElementById('priorityChart')?.getContext('2d');
@@ -263,10 +328,31 @@ const Tasks = {
             if (this.priorityChart) this.priorityChart.destroy();
             this.priorityChart = new Chart(priorityCtx, {
                 type: 'bar',
-                data: { labels: ['High', 'Medium', 'Low'], datasets: [{ label: 'Number of Tasks', data: [high, medium, low], backgroundColor: ['#ef4444', '#f59e0b', '#10b981'] }] },
+                data: { labels: ['High', 'Medium', 'Low'], datasets: [{ label: 'Number of Tasks', data: [high, medium, low], backgroundColor: ['#ef4444', '#f59e0b', '#10b981'], borderRadius: 8 }] },
                 options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
             });
         }
+    },
+
+    toggleDarkMode() {
+        const theme = document.body.getAttribute('data-theme');
+        const icon = document.querySelector('#darkModeToggle i');
+        if (theme === 'dark') {
+            document.body.removeAttribute('data-theme');
+            icon.className = 'fas fa-moon';
+        } else {
+            document.body.setAttribute('data-theme', 'dark');
+            icon.className = 'fas fa-sun';
+        }
+    },
+
+    showNotification(message, type) {
+        const notif = document.createElement('div');
+        notif.className = 'notification';
+        notif.textContent = message;
+        notif.style.backgroundColor = type === 'success' ? '#10b981' : '#ef4444';
+        document.body.appendChild(notif);
+        setTimeout(() => notif.remove(), 3000);
     },
 
     escapeHtml(text) {
@@ -277,5 +363,9 @@ const Tasks = {
     }
 };
 
-// Make functions globally accessible for onclick handlers
-window.Tasks = Tasks;
+// Initialize when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => Tasks.init());
+} else {
+    Tasks.init();
+}

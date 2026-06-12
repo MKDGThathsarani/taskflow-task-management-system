@@ -1,48 +1,40 @@
-// ============= MAIN APPLICATION CONTROLLER =============
-
+// Main Application Controller
 const App = {
     init() {
         console.log('🚀 TaskFlow Application Started');
         console.log('📅 Date:', new Date().toLocaleString());
         console.log('💾 Local Storage Available:', typeof localStorage !== 'undefined');
         
-        this.setupDarkMode();
-        this.checkExistingSession();
-    },
-
-    setupDarkMode() {
-        const darkModeToggle = document.getElementById('darkModeToggle');
-        if (darkModeToggle) {
-            // Check for saved dark mode preference
-            const savedTheme = localStorage.getItem('taskflow_theme');
-            if (savedTheme === 'dark') {
-                document.body.setAttribute('data-theme', 'dark');
-            }
-            
-            darkModeToggle.addEventListener('click', () => {
-                const theme = document.body.getAttribute('data-theme');
-                if (theme === 'dark') {
-                    document.body.removeAttribute('data-theme');
-                    localStorage.setItem('taskflow_theme', 'light');
-                } else {
-                    document.body.setAttribute('data-theme', 'dark');
-                    localStorage.setItem('taskflow_theme', 'dark');
-                }
-            });
-        }
-    },
-
-    checkExistingSession() {
+        // Add notification styles
+        this.addNotificationStyles();
+        
+        // Check for saved user session
         const savedUser = localStorage.getItem('taskflow_user');
         if (savedUser) {
-            console.log('👤 Found existing user session');
+            console.log('👤 Found saved user session');
         } else {
             console.log('👋 No saved session. Please login.');
         }
+        
+        console.log('✅ System ready! Login with: admin@taskflow.com / admin123');
+    },
+
+    addNotificationStyles() {
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            .notification { animation: slideIn 0.3s ease; }
+        `;
+        document.head.appendChild(style);
     }
 };
 
-// Initialize app when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
+// Initialize when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => App.init());
+} else {
     App.init();
-});
+}
