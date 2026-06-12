@@ -35,7 +35,7 @@ const Tasks = {
             { id: 3, title: "Implement login system", description: "Add authentication", assignedTo: "Mike Johnson", priority: "high", status: "completed", dueDate: "2024-12-15", createdAt: new Date().toISOString() },
             { id: 4, title: "Create UI mockups", description: "Design wireframes", assignedTo: "Sarah Williams", priority: "low", status: "pending", dueDate: "2024-12-28", createdAt: new Date().toISOString() },
             { id: 5, title: "Write unit tests", description: "Test all modules", assignedTo: "Thathsarani", priority: "medium", status: "in-progress", dueDate: "2024-12-22", createdAt: new Date().toISOString() },
-            { id: 6, title: "Deploy to server", description: "Production deployment", assignedTo: "John Doe", priority: "high", status: "pending", dueDate: "2024-12-30", createdAt: new Date().toISOString() }
+            { id: 6, title: "Deploy to production", description: "Final deployment", assignedTo: "John Doe", priority: "high", status: "pending", dueDate: "2024-12-30", createdAt: new Date().toISOString() }
         ];
         this.saveTasks();
     },
@@ -54,13 +54,11 @@ const Tasks = {
     },
 
     setupEventListeners() {
-        // Create task form
         const createForm = document.getElementById('createTaskForm');
         if (createForm) {
             createForm.addEventListener('submit', (e) => this.createTask(e));
         }
 
-        // Filters
         const statusFilter = document.getElementById('taskFilterStatus');
         const priorityFilter = document.getElementById('taskFilterPriority');
         const clearFilters = document.getElementById('clearFilters');
@@ -69,23 +67,20 @@ const Tasks = {
         if (statusFilter) statusFilter.addEventListener('change', () => this.loadMyTasks());
         if (priorityFilter) priorityFilter.addEventListener('change', () => this.loadMyTasks());
         if (clearFilters) clearFilters.addEventListener('click', () => this.clearFilters());
-        if (searchInput) searchInput.addEventListener('input', (e) => this.searchTasks(e.target.value));
+        if (searchInput) searchInput.addEventListener('input', () => this.loadMyTasks());
 
-        // Pagination
         const prevBtn = document.getElementById('prevRecentPage');
         const nextBtn = document.getElementById('nextRecentPage');
         if (prevBtn) prevBtn.addEventListener('click', () => this.changeRecentPage(-1));
         if (nextBtn) nextBtn.addEventListener('click', () => this.changeRecentPage(1));
 
-        // Navigation
         document.querySelectorAll('.nav-item').forEach(item => {
-            item.addEventListener('click', (e) => {
+            item.addEventListener('click', () => {
                 const page = item.dataset.page;
                 this.switchPage(page);
             });
         });
 
-        // Dark mode
         const darkToggle = document.getElementById('darkModeToggle');
         if (darkToggle) {
             darkToggle.addEventListener('click', () => this.toggleDarkMode());
@@ -139,22 +134,22 @@ const Tasks = {
         document.getElementById('nextRecentPage').disabled = this.recentCurrentPage === totalPages || totalPages === 0;
         
         if (paginatedTasks.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center">No tasks found</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center">No tasks found<\/td><\/tr>';
             return;
         }
         
         tbody.innerHTML = paginatedTasks.map(task => `
             <tr>
-                <td><strong>${this.escapeHtml(task.title)}</strong></td>
-                <td>${task.assignedTo}</td>
-                <td><span class="priority-badge priority-${task.priority}">${task.priority}</span></td>
-                <td><span class="status-badge status-${task.status === 'in-progress' ? 'progress' : task.status}">${task.status}</span></td>
-                <td>${task.dueDate}</td>
+                <td><strong>${this.escapeHtml(task.title)}<\/strong><\/td>
+                <td>${task.assignedTo}<\/td>
+                <td><span class="priority-badge priority-${task.priority}">${task.priority}<\/span><\/td>
+                <td><span class="status-badge status-${task.status === 'in-progress' ? 'progress' : task.status}">${task.status}<\/span><\/td>
+                <td>${task.dueDate}<\/td>
                 <td>
-                    <button onclick="Tasks.editTask(${task.id})" class="action-btn edit-btn"><i class="fas fa-edit"></i></button>
-                    <button onclick="Tasks.deleteTask(${task.id})" class="action-btn delete-btn"><i class="fas fa-trash"></i></button>
-                </td>
-            </tr>
+                    <button onclick="Tasks.editTask(${task.id})" class="action-btn edit-btn"><i class="fas fa-edit"><\/i><\/button>
+                    <button onclick="Tasks.deleteTask(${task.id})" class="action-btn delete-btn"><i class="fas fa-trash"><\/i><\/button>
+                <\/td>
+            <\/tr>
         `).join('');
     },
 
@@ -180,53 +175,45 @@ const Tasks = {
         const searchTerm = document.getElementById('searchTasks')?.value.toLowerCase() || '';
         
         let filtered = this.allTasks;
-        
         if (this.currentUser && this.currentUser.role !== 'ADMIN') {
             filtered = filtered.filter(t => t.assignedTo === this.currentUser.name);
         }
-        
         if (statusFilter !== 'all') filtered = filtered.filter(t => t.status === statusFilter);
         if (priorityFilter !== 'all') filtered = filtered.filter(t => t.priority === priorityFilter);
         if (searchTerm) filtered = filtered.filter(t => t.title.toLowerCase().includes(searchTerm) || t.description.toLowerCase().includes(searchTerm));
         
         if (filtered.length === 0) {
-            container.innerHTML = '<div class="text-center" style="padding: 40px;">📭 No tasks found</div>';
+            container.innerHTML = '<div class="text-center" style="padding: 40px;">📭 No tasks found<\/div>';
             return;
         }
         
         container.innerHTML = filtered.map(task => `
             <div class="task-card">
                 <div class="task-info">
-                    <h4>${this.escapeHtml(task.title)}</h4>
-                    <p>${this.escapeHtml(task.description || 'No description')}</p>
+                    <h4>${this.escapeHtml(task.title)}<\/h4>
+                    <p>${this.escapeHtml(task.description || 'No description')}<\/p>
                     <div class="task-meta">
-                        <span><i class="fas fa-user"></i> ${task.assignedTo}</span>
-                        <span><i class="fas fa-calendar"></i> Due: ${task.dueDate}</span>
-                    </div>
-                </div>
+                        <span><i class="fas fa-user"><\/i> ${task.assignedTo}<\/span>
+                        <span><i class="fas fa-calendar"><\/i> Due: ${task.dueDate}<\/span>
+                    <\/div>
+                <\/div>
                 <div class="task-actions">
-                    <span class="priority-badge priority-${task.priority}">${task.priority}</span>
-                    <span class="status-badge status-${task.status === 'in-progress' ? 'progress' : task.status}">${task.status}</span>
-                    <button onclick="Tasks.editTask(${task.id})" class="action-btn edit-btn"><i class="fas fa-edit"></i></button>
-                    <button onclick="Tasks.deleteTask(${task.id})" class="action-btn delete-btn"><i class="fas fa-trash"></i></button>
-                </div>
-            </div>
+                    <span class="priority-badge priority-${task.priority}">${task.priority}<\/span>
+                    <span class="status-badge status-${task.status === 'in-progress' ? 'progress' : task.status}">${task.status}<\/span>
+                    <button onclick="Tasks.editTask(${task.id})" class="action-btn edit-btn"><i class="fas fa-edit"><\/i><\/button>
+                    <button onclick="Tasks.deleteTask(${task.id})" class="action-btn delete-btn"><i class="fas fa-trash"><\/i><\/button>
+                <\/div>
+            <\/div>
         `).join('');
-    },
-
-    searchTasks(term) {
-        this.loadMyTasks();
     },
 
     clearFilters() {
         const statusFilter = document.getElementById('taskFilterStatus');
         const priorityFilter = document.getElementById('taskFilterPriority');
         const searchInput = document.getElementById('searchTasks');
-        
         if (statusFilter) statusFilter.value = 'all';
         if (priorityFilter) priorityFilter.value = 'all';
         if (searchInput) searchInput.value = '';
-        
         this.loadMyTasks();
     },
 
@@ -288,8 +275,8 @@ const Tasks = {
     loadTeamMembersForSelect() {
         const select = document.getElementById('taskAssignedTo');
         if (select) {
-            select.innerHTML = '<option value="">Select team member</option>' + 
-                this.teamMembers.map(m => `<option value="${m.name}">${m.name} (${m.role})</option>`).join('');
+            select.innerHTML = '<option value="">Select team member<\/option>' + 
+                this.teamMembers.map(m => `<option value="${m.name}">${m.name} (${m.role})<\/option>`).join('');
         }
     },
 
