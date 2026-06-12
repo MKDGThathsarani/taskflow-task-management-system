@@ -45,7 +45,7 @@ const Auth = {
         const USERS = {
             'admin@taskflow.com': { password: 'admin123', name: 'Admin User', role: 'ADMIN' },
             'member@taskflow.com': { password: 'member123', name: 'Team Member', role: 'MEMBER' },
-            'mkgdthathsarani@gmail.com': { password: 'admin123', name: 'Thathsarani', role: 'ADMIN' }
+            'mkdgthathsarani@gmail.com': { password: 'admin123', name: 'Thathsarani', role: 'ADMIN' }
         };
         
         const user = USERS[email];
