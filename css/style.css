@@ -430,7 +430,11 @@ body {
     justify-content: center;
 }
 
-.stat-icon i { font-size: 28px; color: white; }
+.stat-icon i {
+    font-size: 28px;
+    color: white;
+}
+
 .stat-icon.blue { background: linear-gradient(135deg, #3b82f6, #2563eb); }
 .stat-icon.green { background: linear-gradient(135deg, #10b981, #059669); }
 .stat-icon.yellow { background: linear-gradient(135deg, #f59e0b, #d97706); }
@@ -476,9 +480,9 @@ body {
     color: var(--text-primary);
 }
 
-.page-btn:hover {
-    background: var(--gradient-start);
-    color: white;
+.page-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .tasks-table-container {
@@ -531,7 +535,6 @@ body {
 
 .edit-btn { background: #dbeafe; color: #2563eb; }
 .delete-btn { background: #fee2e2; color: #dc2626; }
-.view-btn { background: #e0e7ff; color: #4338ca; }
 
 .text-center { text-align: center; }
 
