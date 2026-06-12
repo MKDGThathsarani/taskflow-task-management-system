@@ -1,27 +1,36 @@
-// Authentication Module
+// ============= AUTHENTICATION MODULE =============
+
 const Auth = {
     currentUser: null,
 
-    init: function() {
-        console.log('✅ Auth module initialized');
+    // Demo users database
+    USERS: {
+        'admin@taskflow.com': { password: 'admin123', name: 'Admin User', role: 'ADMIN' },
+        'member@taskflow.com': { password: 'member123', name: 'Team Member', role: 'MEMBER' },
+        'mkgdthathsarani@gmail.com': { password: 'admin123', name: 'Thathsarani', role: 'ADMIN' }
+    },
+
+    init() {
         this.loadUserFromStorage();
         this.setupEventListeners();
     },
 
-    loadUserFromStorage: function() {
-        const savedUser = localStorage.getItem('currentUser');
+    loadUserFromStorage() {
+        const savedUser = localStorage.getItem('taskflow_user');
         if (savedUser) {
             try {
                 this.currentUser = JSON.parse(savedUser);
-                console.log('📀 Loaded user:', this.currentUser.email);
-                this.updateUIForLoggedInUser();
+                if (typeof Tasks !== 'undefined') {
+                    Tasks.init(this.currentUser);
+                }
+                this.showDashboard();
             } catch(e) {
-                console.error('Error:', e);
+                console.error('Error loading user:', e);
             }
         }
     },
 
-    setupEventListeners: function() {
+    setupEventListeners() {
         const loginForm = document.getElementById('loginForm');
         if (loginForm) {
             loginForm.addEventListener('submit', (e) => this.handleLogin(e));
@@ -33,48 +42,32 @@ const Auth = {
         }
     },
 
-    handleLogin: function(e) {
+    handleLogin(e) {
         e.preventDefault();
         
-        const email = document.getElementById('loginEmail').value;
+        const email = document.getElementById('loginEmail').value.trim();
         const password = document.getElementById('loginPassword').value;
         
-        console.log('🔐 Login attempt:', email);
+        const user = this.USERS[email];
         
-        // Users database - ඔයාගේ email එක add කරලා
-        const users = {
-            'admin@taskflow.com': { password: 'admin123', name: 'Admin User', role: 'ADMIN', department: 'Management' },
-            'lead@taskflow.com': { password: 'lead123', name: 'Team Lead', role: 'TEAM_LEAD', department: 'Development' },
-            'member@taskflow.com': { password: 'member123', name: 'Team Member', role: 'MEMBER', department: 'Development' },
-            'mkdgthathsarani@gmail.com': { password: 'admin123', name: 'Thathsarani', role: 'ADMIN', department: 'Management' }
-        };
-        
-        // Check credentials
-        if (users[email] && users[email].password === password) {
+        if (user && user.password === password) {
             this.currentUser = {
                 email: email,
-                name: users[email].name,
-                role: users[email].role,
-                department: users[email].department
+                name: user.name,
+                role: user.role
             };
             
-            localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
-            console.log('✅ Login successful!');
-            this.showNotification('✅ Login successful! Welcome ' + this.currentUser.name, 'success');
-            this.updateUIForLoggedInUser();
-            
-            if (typeof Tasks !== 'undefined') {
-                Tasks.loadTasks();
-            }
+            localStorage.setItem('taskflow_user', JSON.stringify(this.currentUser));
+            this.showNotification(`✅ Welcome ${user.name}!`, 'success');
+            this.showDashboard();
         } else {
-            console.log('❌ Login failed');
-            this.showNotification('❌ Invalid email or password! Please use: mkgdthathsarani@gmail.com / admin123', 'error');
+            this.showNotification('❌ Invalid email or password!', 'error');
         }
     },
 
-    handleLogout: function() {
+    handleLogout() {
         this.currentUser = null;
-        localStorage.removeItem('currentUser');
+        localStorage.removeItem('taskflow_user');
         
         document.getElementById('loginPage').classList.add('active');
         document.getElementById('dashboardPage').classList.remove('active');
@@ -85,41 +78,39 @@ const Auth = {
         this.showNotification('👋 Logged out successfully!', 'success');
     },
 
-    updateUIForLoggedInUser: function() {
-        if (this.currentUser) {
-            document.getElementById('loginPage').classList.remove('active');
-            document.getElementById('dashboardPage').classList.add('active');
-            
-            const userNameDisplay = document.getElementById('userNameDisplay');
-            if (userNameDisplay) {
-                userNameDisplay.textContent = `${this.currentUser.name} (${this.currentUser.role})`;
-            }
+    showDashboard() {
+        document.getElementById('loginPage').classList.remove('active');
+        document.getElementById('dashboardPage').classList.add('active');
+        
+        document.getElementById('userName').textContent = this.currentUser.name;
+        document.getElementById('userRole').textContent = this.currentUser.role;
+        
+        const isAdmin = this.currentUser.role === 'ADMIN';
+        const createTaskNav = document.getElementById('createTaskNav');
+        if (createTaskNav) {
+            createTaskNav.style.display = isAdmin ? 'flex' : 'none';
+        }
+        
+        if (typeof Tasks !== 'undefined') {
+            Tasks.loadAllData();
         }
     },
 
-    showNotification: function(message, type) {
-        const notification = document.createElement('div');
-        notification.className = 'notification';
-        notification.textContent = message;
-        notification.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 12px 20px;
-            border-radius: 8px;
-            color: white;
-            z-index: 1000;
-            background: ${type === 'success' ? '#10b981' : '#ef4444'};
-            animation: slideIn 0.3s ease;
-        `;
-        document.body.appendChild(notification);
-        setTimeout(() => notification.remove(), 3000);
+    showNotification(message, type) {
+        const notif = document.createElement('div');
+        notif.className = 'notification';
+        notif.textContent = message;
+        notif.style.backgroundColor = type === 'success' ? '#10b981' : '#ef4444';
+        document.body.appendChild(notif);
+        setTimeout(() => notif.remove(), 3000);
+    },
+
+    getCurrentUser() {
+        return this.currentUser;
     }
 };
 
-// Initialize
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => Auth.init());
-} else {
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
     Auth.init();
-}
+});

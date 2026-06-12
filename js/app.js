@@ -1,40 +1,44 @@
-// Main Application Controller
+// ============= MAIN APPLICATION CONTROLLER =============
+
 const App = {
-    init: function() {
-        console.log('TaskFlow Application Started');
+    init() {
+        console.log('🚀 TaskFlow Application Started');
+        console.log('📅 Date:', new Date().toLocaleString());
+        console.log('💾 Local Storage Available:', typeof localStorage !== 'undefined');
         
-        // Add notification styles if not present
-        this.addNotificationStyles();
-        
-        // Check if user is already logged in
-        const currentUser = localStorage.getItem('currentUser');
-        if (currentUser) {
-            const user = JSON.parse(currentUser);
-            if (Auth.currentUser) {
-                Auth.updateUIForLoggedInUser();
+        this.setupDarkMode();
+        this.checkExistingSession();
+    },
+
+    setupDarkMode() {
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        if (darkModeToggle) {
+            // Check for saved dark mode preference
+            const savedTheme = localStorage.getItem('taskflow_theme');
+            if (savedTheme === 'dark') {
+                document.body.setAttribute('data-theme', 'dark');
             }
+            
+            darkModeToggle.addEventListener('click', () => {
+                const theme = document.body.getAttribute('data-theme');
+                if (theme === 'dark') {
+                    document.body.removeAttribute('data-theme');
+                    localStorage.setItem('taskflow_theme', 'light');
+                } else {
+                    document.body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('taskflow_theme', 'dark');
+                }
+            });
         }
     },
 
-    addNotificationStyles: function() {
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes slideIn {
-                from {
-                    transform: translateX(100%);
-                    opacity: 0;
-                }
-                to {
-                    transform: translateX(0);
-                    opacity: 1;
-                }
-            }
-            
-            .notification {
-                animation: slideIn 0.3s ease;
-            }
-        `;
-        document.head.appendChild(style);
+    checkExistingSession() {
+        const savedUser = localStorage.getItem('taskflow_user');
+        if (savedUser) {
+            console.log('👤 Found existing user session');
+        } else {
+            console.log('👋 No saved session. Please login.');
+        }
     }
 };
 
